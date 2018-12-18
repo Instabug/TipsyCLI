@@ -1,4 +1,5 @@
 import Foundation
+import SwiftCLI
 
 public final class Tipsy {
     private let arguments: [String]
@@ -8,6 +9,10 @@ public final class Tipsy {
     }
     
     public func run() throws {
-        print("Hello world")
+        let version = "0.0.1"
+        let tipsy = CLI(name: "tipsy", version: version)
+        tipsy.commands = [RunCommand()]
+        _ = tipsy.go()
     }
 }
+    

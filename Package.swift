@@ -7,6 +7,7 @@ let package = Package(
     name: "Tipsy",
     dependencies: [
         .package(url: "https://github.com/jakeheis/SwiftCLI", .upToNextMinor(from: "5.2.0")),
+        .package(url: "https://github.com/tuist/xcodeproj.git", .upToNextMinor(from: "6.3.0")),
     ],
     targets: [
         .target(
@@ -14,7 +15,7 @@ let package = Package(
             dependencies: ["TipsyCore"]),
         .target(
             name: "TipsyCore",
-            dependencies: ["SwiftCLI"]),
+            dependencies: ["SwiftCLI", "xcodeproj"]),
         .testTarget(
             name: "TipsyTests",
             dependencies: ["Tipsy"]),

@@ -42,3 +42,82 @@
     - Uses CLI to run that target, so scheme and workspace need to be specified.
  
 */
+import SwiftCLI
+import xcodeproj
+import PathKit
+
+class RunCommand: Command {
+    let name = "run"
+    let shortDescription = "🏃🏻‍♀️"
+    
+//    let gitHubOrganization = Parameter()
+//    let gitHubUsername = Parameter()
+    
+    func execute() throws {
+        let path = Path("/Users/Hesham/Documents/Work/iOS/Tipsy/Example/Tipsy.xcodeproj")
+        let project = try! XcodeProj(path: path)
+        
+//        for group in project.pbxproj.groups {
+//            print(group.name)
+//        }
+        
+//        let existingGroup = project.pbxproj.groups.first { $0.name == "Example for Tipsy" }!
+        let existingGroup = try project.pbxproj.rootGroup() // { $0.name == "Example for Tipsy" }!
+
+        
+        let newGroup = PBXGroup(sourceTree: .group,
+                                name: "CustomPBXGroup")
+        
+        existingGroup?.children.append(newGroup)
+        
+//        project.pbxproj.nativeTargets.forEach { (target) in
+//            print(target.name)
+//        }
+        
+        ///
+        
+//        let project = try! XcodeProj(path: "testing.xcodeproj")
+//        let newGroup = PBXGroup(children: [],
+//                             sourceTree: project.pbxproj.groups[0].sourceTree, name: "TipsysAutoGen")
+//        group.name = "CustomPBXGroup"
+//        project.pbxproj.objects.append(.pbxGroup(group))
+//        try! project.write(path: "testing.xcodeproj", override: true)
+        
+        ///
+        
+//        let newGroup = PBXGroup(children: <#T##[PBXFileElement]#>, sourceTree: <#T##PBXSourceTree?#>, name: <#T##String?#>, path: <#T##String?#>, includeInIndex: <#T##Bool?#>, wrapsLines: <#T##Bool?#>, usesTabs: <#T##Bool?#>, indentWidth: <#T##UInt?#>, tabWidth: <#T##UInt?#>)
+        
+//            let fi
+        
+        // find your existing group
+//        let existingGroup = project.pbxproj.groups.first { $0.name == "ExistingGroup" }!
+        
+        // append the new group to the existing groups children
+//        existingGroup.children.append(newGroup.reference)
+        
+        //add the new group to the the list of groups
+        project.pbxproj.add(object: newGroup) //groups.append(newGroup)
+//        project.pbxproj.groups
+//        project.pbxproj.targets(named: "Tipsy_Tests").first?.sourceFiles().a
+    
+        let file = try newGroup.addFile(at: Path("/Users/Hesham/Documents/Work/iOS/Tipsy/Example/AutogenTest.swift"), sourceRoot: Path("/Users/Hesham/Documents/Work/iOS/Tipsy/Example/"))
+        let buildFile = PBXBuildFile(file: file)
+        
+        project.pbxproj.add(object: buildFile)
+        
+//        project.pbxproj.targets(named: "Tipsy_Tests").first?
+
+        
+//        let phases = project.pbxproj.sourcesBuildPhases
+        
+        let phase = try project.pbxproj.targets(named: "Tipsy_Tests").first?.sourcesBuildPhase()
+        
+        try phase?.add(file: file)
+        
+//        if let phase = phase {
+//
+//        }
+        
+        try! project.write(path: path, override: true)
+    }
+}
