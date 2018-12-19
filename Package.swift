@@ -8,6 +8,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/jakeheis/SwiftCLI", .upToNextMinor(from: "5.2.0")),
         .package(url: "https://github.com/tuist/xcodeproj.git", .upToNextMinor(from: "6.3.0")),
+        .package(url: "https://github.com/oarrabi/FileUtils.git", .upToNextMinor(from: "0.2.0")),
     ],
     targets: [
         .target(
@@ -15,7 +16,7 @@ let package = Package(
             dependencies: ["TipsyCore"]),
         .target(
             name: "TipsyCore",
-            dependencies: ["SwiftCLI", "xcodeproj"]),
+            dependencies: ["SwiftCLI", "xcodeproj", "FileUtils"]),
         .testTarget(
             name: "TipsyTests",
             dependencies: ["Tipsy"]),
