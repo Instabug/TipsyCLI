@@ -65,7 +65,8 @@ class RunCommand: Command {
      *
      * Things command should do:
      * 1. Create test class
-     * 2. Run xcodebuild command
+     * 2. Clean up simulator (add --no-reset option)
+     * 3. Run xcodebuild command
      */
     
     func execute() throws {
