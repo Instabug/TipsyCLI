@@ -10,6 +10,18 @@ final class TipsyCLITests: XCTestCase {
         let tempPath = runCommand.tempPathFrom(path: Path("test.xcodeproj"))
         XCTAssertEqual(tempPath.string, "test-temp.xcodeproj")
     }
+    
+//    func testClassName() throws {
+//        let command = RunCommand()
+//        let names = command.createScenarioProvidersArrayFrom(classesNames: "Class1, Class2, Class3")
+//        XCTAssertEqual(names, "Class1.self, Class2.self, Class3.self")
+//    }
+//    
+//    func testClassName2() throws {
+//        let command = RunCommand()
+//        let names = command.createScenarioProvidersArrayFrom(classesNames: "Class1,Class2,Class3")
+//        XCTAssertEqual(names, "Class1.self, Class2.self, Class3.self")
+//    }
 
     /// Returns path to the built products directory.
     var productsDirectory: URL {

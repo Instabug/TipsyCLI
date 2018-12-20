@@ -9,6 +9,7 @@ let package = Package(
         .package(url: "https://github.com/jakeheis/SwiftCLI", .upToNextMinor(from: "5.2.0")),
         .package(url: "https://github.com/tuist/xcodeproj.git", .upToNextMinor(from: "6.3.0")),
         .package(url: "https://github.com/kylef/PathKit", .upToNextMinor(from: "0.9.2")),
+        .package(url: "https://github.com/kareman/SwiftShell", .upToNextMinor(from: "4.1.2")),
     ],
     targets: [
         .target(
@@ -16,7 +17,7 @@ let package = Package(
             dependencies: ["TipsyCore"]),
         .target(
             name: "TipsyCore",
-            dependencies: ["SwiftCLI", "xcodeproj", "PathKit"]),
+            dependencies: ["SwiftCLI", "xcodeproj", "PathKit", "SwiftShell"]),
         .testTarget(
             name: "TipsyTests",
             dependencies: ["Tipsy"]),
