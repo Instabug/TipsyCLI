@@ -88,10 +88,15 @@ class RunCommand: Command {
             print(entryPointPath)
             
             let tempWorkspaceName = tempNameFrom(fileName: xcodeWorkspaceName.value)
+            let tempProjectName = tempNameFrom(fileName: xcodeProjectName.value)
             
             startTipsyRun(workspaceName: tempWorkspaceName,
                           targetName: xcodeTargetName.value,
                           entryPointName: entryPointClassName)
+            
+            cleanUpTempFiles(workspacePath: Path(tempWorkspaceName),
+                             projectPath: Path(tempProjectName),
+                             entryPointPath: Path(entryPointPath))
         } catch {
             print("Failed to generate entry point.")
         }
@@ -270,5 +275,15 @@ extension RunCommand {
         let tempName = "\(nameComponents[0])-temp.\(nameComponents[1])"
         
         return tempName
+    }
+    
+    func cleanUpTempFiles(workspacePath: Path, projectPath: Path, entryPointPath: Path) {
+        do {
+            try cleanUpTempFilesAt(path: workspacePath)
+            try cleanUpTempFilesAt(path: projectPath)
+            try cleanUpTempFilesAt(path: entryPointPath)
+        } catch {
+            print("Failed to clean up temp files after run.")
+        }
     }
 }
