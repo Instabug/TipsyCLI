@@ -124,8 +124,12 @@ class RunCommand: Command {
     }
     
     func resetSimulator() {
+        print("Shutting down simulator.")
+        main.run(bash: "killall Simulator")
+        
         print("Resetting simulator.")
-        main.run(bash: "killall \"Simulator\" 2> /dev/null; xcrun simctl erase all")
+        main.run(bash: "xcrun simctl erase all")
+        
         // TODO: handle error
         print("Reset simulator.")
 //        do {
@@ -149,20 +153,48 @@ class RunCommand: Command {
 extension RunCommand {
     
     func startTipsyRun(workspaceName: String, targetName: String, entryPointName: String) {
-        print("Booting simulator")
-        main.run(bash: "xcrun simctl boot \(defaultDeviceIdentifier)")
+        print("Checking if simulator is running.")
+        let output = main.run(bash: "killall -d Simulator")
+        
+        if output.exitcode == 1 {
+            print("Starting simulator app.")
+            main.run(bash: "open -a Simulator.app")
+            
+            print("Waiting for simulator to boot.")
+            sleep(25)
+        }
+        
+        
+//        print("Booting simulator.")
+//        main.run(bash: "xcrun simctl boot \(defaultDeviceIdentifier)")
+        
         
         print("Started run.")
         
-        let testCommand = "xcodebuild -workspace \(workspaceName) -scheme \(targetName) -sdk iphonesimulator -destination 'id=\(defaultDeviceIdentifier)' -only-testing:\(targetName)/\(entryPointName) test"
+        var testCommand = ""
+        if isXcprettyAvailable() {
+            testCommand = "set -o pipefail && xcodebuild -workspace \(workspaceName) -scheme \(targetName) -sdk iphonesimulator -destination 'id=\(defaultDeviceIdentifier)' -only-testing:\(targetName)/\(entryPointName) test | xcpretty"
+        } else {
+            testCommand = "xcodebuild -workspace \(workspaceName) -scheme \(targetName) -sdk iphonesimulator -destination 'id=\(defaultDeviceIdentifier)' -only-testing:\(targetName)/\(entryPointName) test"
+        }
         
-//        do {
-            main.run(bash: testCommand)
-//        } catch {
-//            print("Something went wrong while trying to run test command.")
-//        }
+        do {
+            try main.runAndPrint(bash: testCommand)
+        } catch {
+            print("Something went wrong while trying to run test command.")
+        }
         
         print("Finished run.")
+    }
+    
+    func isXcprettyAvailable() -> Bool {
+        let output = main.run(bash: "which xcpretty")
+        
+        if output.exitcode == 0 {
+            return true
+        }
+        
+        return false
     }
 }
 
