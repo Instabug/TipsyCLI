@@ -50,7 +50,7 @@ import Foundation
 
 class RunCommand: Command {
     let name = "run"
-    let shortDescription = "🏃🏻‍♀️"
+    let shortDescription = "Start a Tipsy run."
     
     let xcodeWorkspaceName = Parameter()
     let xcodeProjectName = Parameter()
@@ -75,46 +75,36 @@ class RunCommand: Command {
     let entryPointClassName = "Tipsy_EntryPoint"
     let defaultDeviceIdentifier = "B3C24A3C-00B8-4BD7-83CB-44B60FCE9DBB"
     
-    /* Things command needs to run:
-     * 1. workspace name
-     * 2. Names of ScenarioProviders to run
-     * 3. Name of test target that contains the scenarios
-     * 4. Name of scheme to run
-     *
-     * Things command should do:
-     * 1. Create test class
-     * 2. Clean up simulator (add --no-reset option)
-     * 3. Run xcodebuild command
-     * 4. Clean up all temp files after run
-     */
-    
     func execute() throws {
-        
-        do {
-            if let bundleIdentifier = uninstall.value {
-                uninstallAppWith(bundleIdentifier: bundleIdentifier)
-            }
-            
-            if reset.value {
-                resetSimulator()
-            }
-            
-            let entryPointPath = try createEntryPoint()
-            
-            let tempWorkspaceName = tempNameFrom(fileName: xcodeWorkspaceName.value)
-            let tempProjectName = tempNameFrom(fileName: xcodeProjectName.value)
-            
-            startTipsyRun(workspaceName: tempWorkspaceName,
-                          targetName: xcodeTargetName.value,
-                          entryPointName: entryPointClassName)
-            
-            cleanUpTempFiles(workspacePath: Path(tempWorkspaceName),
-                             projectPath: Path(tempProjectName),
-                             entryPointPath: Path(entryPointPath))
-        } catch {
-            print("Failed to generate entry point.")
+        if let bundleIdentifier = uninstall.value {
+            uninstallAppWith(bundleIdentifier: bundleIdentifier)
         }
+        
+        if reset.value {
+            resetSimulator()
+        }
+        
+        guard let entryPointPath =  createEntryPoint() else {
+            print("Failed to generated entry point.")
+            return
+        }
+
+        let tempWorkspaceName = tempNameFrom(fileName: xcodeWorkspaceName.value)
+        let tempProjectName = tempNameFrom(fileName: xcodeProjectName.value)
+        
+        startTipsyRun(workspaceName: tempWorkspaceName,
+                      targetName: xcodeTargetName.value,
+                      entryPointName: entryPointClassName)
+        
+        cleanUpTempFiles(workspacePath: Path(tempWorkspaceName),
+                         projectPath: Path(tempProjectName),
+                         entryPointPath: Path(entryPointPath))
     }
+}
+
+// MARK: Helpers
+
+extension RunCommand {
     
     func formattedDate() -> String {
         let date = Date()
@@ -122,33 +112,47 @@ class RunCommand: Command {
         formatter.dateFormat = "MM/dd/yyyy hh:mm a"
         return formatter.string(from: date)
     }
+}
+
+// MARK: Simulator
+
+extension RunCommand {
     
     func resetSimulator() {
         print("Shutting down simulator.")
-        main.run(bash: "killall Simulator")
+        var output = main.run(bash: "killall Simulator")
+        
+        if let _ = output.error {
+            print("Failed to shutdown simulator.")
+            return
+        }
         
         print("Resetting simulator.")
-        main.run(bash: "xcrun simctl erase all")
+        output = main.run(bash: "xcrun simctl erase all")
         
-        // TODO: handle error
+        if let _ = output.error {
+            print("Failed to reset simulator.")
+            return
+        }
+        
         print("Reset simulator.")
-//        do {
-//            try main.runAndPrint(bash: "killall \"Simulator\" 2> /dev/null; xcrun simctl erase all")
-//        } catch {
-//            print("Failed to reset simulator.")
-//        }
     }
     
     func uninstallAppWith(bundleIdentifier: String) {
         print("Uninstalling app with bundle identifier \(bundleIdentifier)")
-        main.run(bash: "xcrun simctl uninstall booted \(bundleIdentifier)")
-        // TODO: handle error
+        
+        let output = main.run(bash: "xcrun simctl uninstall booted \(bundleIdentifier)")
+        
+        if let _ = output.error {
+            print("Failed to uninstall app.")
+        }
+        
         print("Uninstalled app.")
         
     }
 }
 
-// MARK: Xcode build
+// MARK: Xcode Build
 
 extension RunCommand {
     
@@ -163,11 +167,6 @@ extension RunCommand {
             print("Waiting for simulator to boot.")
             sleep(25)
         }
-        
-        
-//        print("Booting simulator.")
-//        main.run(bash: "xcrun simctl boot \(defaultDeviceIdentifier)")
-        
         
         print("Started run.")
         
@@ -205,47 +204,74 @@ extension RunCommand {
     /**
      Create entry point for Tipsy and returns the autogenerated class path.
      */
-    func createEntryPoint() throws -> String {
+    func createEntryPoint() -> String? {
         print("Creating entry point")
         
         // Create temp project
         var xcodeProjectPath = Path()
+        let xcodeProject: XcodeProj
         
         do {
             xcodeProjectPath = try createTempCopyOf(path: Path(xcodeProjectName.value))
+            xcodeProject = try XcodeProj(path: xcodeProjectPath)
         } catch {
             print("Failed to create temp project.")
+            return nil
         }
-        
-        let xcodeProject = try XcodeProj(path: xcodeProjectPath)
-
         
         // Create temp workspace
         let workspacePath = Path(xcodeWorkspaceName.value)
+        
         do {
             try createTempCopyFromWorkspaceAt(path: workspacePath, tempProjectPath: xcodeProjectPath)
         } catch {
             print("Failed to create temp workspace.")
+            return nil
         }
         
         // Create a new group under the root group.
-        let rootGroup = try xcodeProject.pbxproj.rootGroup()
-        let autogeneratedGroup = PBXGroup(sourceTree: .group, name: autogeneratedXcodeGroupName)
-        rootGroup?.children.append(autogeneratedGroup)
-        xcodeProject.pbxproj.add(object: autogeneratedGroup)
+        let autogeneratedGroup: PBXGroup
+        
+        do {
+            let rootGroup = try xcodeProject.pbxproj.rootGroup()
+            autogeneratedGroup = PBXGroup(sourceTree: .group, name: autogeneratedXcodeGroupName)
+            rootGroup?.children.append(autogeneratedGroup)
+            xcodeProject.pbxproj.add(object: autogeneratedGroup)
+        } catch {
+            print("Failed to create a new group under temp project.")
+            return nil
+        }
         
         // Generate file and add it to the project.
-        let autogeneratedFilePath = generateTestClass()
-        let autogeneratedFile = try autogeneratedGroup.addFile(at: Path(autogeneratedFilePath), sourceRoot: Path.current)
-        let buildFile = PBXBuildFile(file: autogeneratedFile)
-        xcodeProject.pbxproj.add(object: buildFile)
+        let autogeneratedFile: PBXFileReference
+        let autogeneratedFilePath: String
+        
+        do {
+            autogeneratedFilePath = generateTestClass()
+            autogeneratedFile = try autogeneratedGroup.addFile(at: Path(autogeneratedFilePath), sourceRoot: Path.current)
+            let buildFile = PBXBuildFile(file: autogeneratedFile)
+            xcodeProject.pbxproj.add(object: buildFile)
+        } catch {
+            print("Failed to generate entry point and add it to project.")
+            return nil
+        }
         
         // Get the sources build phase of the passed target and add the autogenerated file to it.
-        let sourcesBuildPhase = try xcodeProject.pbxproj.targets(named: xcodeTargetName.value).first?.sourcesBuildPhase()
-        _ = try sourcesBuildPhase?.add(file: autogeneratedFile)
+        do {
+            let sourcesBuildPhase = try xcodeProject.pbxproj.targets(named: xcodeTargetName.value).first?.sourcesBuildPhase()
+            _ = try sourcesBuildPhase?.add(file: autogeneratedFile)
+        } catch {
+            print("Failed to add entry point to build phases.")
+            return nil
+        }
         
         // Write everything back to disk.
-        try xcodeProject.write(path: xcodeProjectPath, override: true)
+        do {
+            try xcodeProject.write(path: xcodeProjectPath, override: true)
+        } catch {
+            print("Failed to save temp project to disk.")
+            return nil
+        }
         
         print("Created entry point at \(autogeneratedFilePath).")
         
