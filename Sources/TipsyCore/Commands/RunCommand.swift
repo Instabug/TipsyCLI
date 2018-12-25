@@ -315,7 +315,7 @@ extension RunCommand {
             
                     do {
                         let steps = try decoder.decode([Step].self, from: data)
-                        Tipsy.runner.run(steps: steps)
+                        Tipsy.runner.runReplayOf(steps: steps)
                     } catch {
                         fatalError("Failed to read replay file at \\(url)")
                     }
