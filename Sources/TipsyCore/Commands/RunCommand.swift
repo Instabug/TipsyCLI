@@ -14,11 +14,11 @@ class RunCommand: Command {
     // See:
     // 1. https://medium.com/@jdxcode/12-factor-cli-apps-dd3c227a0e46
     // 2. https://softwareengineering.stackexchange.com/questions/307467/
-    let workspace = Key<String>("-w", "--workspace", description: "Path to .xcworkspace file.")
-    let project = Key<String>("-p", "--project", description: "Path to .xcodeproj file.")
-    let target = Key<String>("-t", "--target", description: "Name of target that contains ScenarioProvider classes.")
-    let scenarios = Key<String>("-s", "--scenarios", description: "Name of ScenarioProvider subclasses to run.")
-    let deviceUdid = Key<String>("-u", "--device-udid", description: "UDID of device or simulator to run Tipsy on.")
+    let workspace = Key<String>("-w", "--workspace", description: "[REQUIRED] Path to .xcworkspace file.")
+    let project = Key<String>("-p", "--project", description: "[REQUIRED] Path to .xcodeproj file.")
+    let target = Key<String>("-t", "--target", description: "[REQUIRED] Name of target that contains ScenarioProvider classes.")
+    let scenarios = Key<String>("-s", "--scenarios", description: "[REQUIRED] Name of ScenarioProvider subclasses to run.")
+    let deviceUdid = Key<String>("-u", "--device-udid", description: "[REQUIRED] UDID of device or simulator to run Tipsy on.")
     
     // Run modes
     let time = Key<Int>("-d", "--time", description: "Time to keep running Tipsy for.")
