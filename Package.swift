@@ -5,6 +5,9 @@ import PackageDescription
 
 let package = Package(
     name: "Tipsy",
+    products: [
+        .executable(name: "tipsy", targets: ["Tipsy"]),
+    ],
     dependencies: [
         .package(url: "https://github.com/jakeheis/SwiftCLI", .upToNextMinor(from: "5.2.0")),
         .package(url: "https://github.com/tuist/xcodeproj.git", .upToNextMinor(from: "6.3.0")),
