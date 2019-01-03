@@ -1,6 +1,6 @@
 # TipsyCLI
 
-## Install
+## Installation
 
 ### Using Mint
 
