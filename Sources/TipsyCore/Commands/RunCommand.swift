@@ -30,7 +30,9 @@ class RunCommand: Command {
     let reset = Flag("-x", "--reset", description: "Reset simulator before starting the run.")
     let uninstall = Key<String>("-u", "--uninstall", description: "App bundle identifier to uninstall before starting the run.")
     
-
+    // Other options
+    let preRun = Key<String>("-n", "--pre-run", description: "Reference to a closure of type () -> Void to be executed before any actions are run.")
+    
     var optionGroups: [OptionGroup] {
         let runMode: OptionGroup = .atMostOne(time, comprehensive, replay)
         let resetOptions: OptionGroup = .atMostOne(reset, uninstall)
@@ -313,6 +315,7 @@ extension RunCommand {
         
                 Tipsy.runner.add(scenarios: scenarios)
                 \(replayFilePathStatement())
+                \(preRunHandlerStatement())
                 \(runStatementForCurrentRunMode())
         
                 Tipsy.runner.wait(self)
@@ -335,6 +338,14 @@ extension RunCommand {
         let classNamesArray = classesNames.split(separator: ",")
         let trimmedClassesNamesArray = classNamesArray.map { "\($0.trimmingCharacters(in: .whitespaces)).self" }
         return trimmedClassesNamesArray.joined(separator: ", ")
+    }
+    
+    func preRunHandlerStatement() -> String {
+        if let preRun = preRun.value {
+            return "Tipsy.runner.preRunHandler = \(preRun)"
+        }
+        
+        return ""
     }
     
     func runStatementForCurrentRunMode() -> String {
