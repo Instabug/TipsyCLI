@@ -336,7 +336,7 @@ extension RunCommand {
     
     func createScenarioProvidersArrayFrom(classesNames: String) -> String {
         let classNamesArray = classesNames.split(separator: ",")
-        let trimmedClassesNamesArray = classNamesArray.map { "\($0.trimmingCharacters(in: .whitespaces)).self" }
+        let trimmedClassesNamesArray = classNamesArray.map { "\($0.trimmingCharacters(in: .whitespaces))(with: .highest)" }
         return trimmedClassesNamesArray.joined(separator: ", ")
     }
     
