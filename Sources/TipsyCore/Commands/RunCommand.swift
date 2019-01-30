@@ -309,7 +309,7 @@ extension RunCommand {
         class \(entryPointClassName): TipsyTestCase {
         
             func test_startTipsyRun() {
-                let scenarios = Bartender.serve(fromProviders: [
+                let scenarios = Bartender.serve(from: [
                     \(createScenarioProvidersArrayFrom(classesNames: scenarios))
                 ])
         
