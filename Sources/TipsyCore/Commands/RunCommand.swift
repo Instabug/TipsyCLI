@@ -352,9 +352,11 @@ extension RunCommand {
         if comprehensive.value {
             return "Tipsy.runner.runComprehensively()"
         } else if let replayFileInputPath = replay.value {
+            let escapedReplayFilePath = replayFileInputPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)
+            
             return """
             // Replay run
-                    let url = URL(string: "file://\(replayFileInputPath)")!
+                    let url = URL(string: "file://\(escapedReplayFilePath!)")!
                     let data = try! Data.init(contentsOf: url)
                     let decoder = JSONDecoder()
             
