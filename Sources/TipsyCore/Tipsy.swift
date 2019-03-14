@@ -9,7 +9,7 @@ public final class Tipsy {
     }
     
     public func run() throws {
-        let version = "0.0.6"
+        let version = "0.0.7"
         let tipsy = CLI(name: "tipsy", version: version)
         tipsy.commands = [RunCommand()]
         _ = tipsy.go()
