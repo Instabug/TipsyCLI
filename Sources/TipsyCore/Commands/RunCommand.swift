@@ -18,7 +18,7 @@ class RunCommand: Command {
     let project = Key<String>("-p", "--project", description: "[REQUIRED] Path to .xcodeproj file.")
     let target = Key<String>("-t", "--target", description: "[REQUIRED] Name of target that contains ScenarioProvider classes.")
     let scenarios = Key<String>("-s", "--scenarios", description: "[REQUIRED] Name of ScenarioProvider subclasses to run.")
-    let deviceUdid = Key<String>("-u", "--device-udid", description: "[REQUIRED] UDID of device or simulator to run Tipsy on.")
+    let destination = Key<String>("-u", "--destination", description: "[REQUIRED] A destination to run Tipsy on. Follows the same format of xcodebuild's -destination paramater.")
     
     // Run modes
     let time = Key<Int>("-d", "--time", description: "Time to keep running Tipsy for.")
@@ -60,8 +60,8 @@ class RunCommand: Command {
             throw CLI.Error(message: "Please provide scenarios to run using --scenarios.")
         }
         
-        guard let deviceUdid = deviceUdid.value else {
-            throw CLI.Error(message: "Please provide UDID of device or simulator to run on using --device-udid.")
+        guard let destination = destination.value else {
+            throw CLI.Error(message: "Please provide a destination to run on using --destination.")
         }
         
         if let bundleIdentifier = uninstall.value {
@@ -86,7 +86,7 @@ class RunCommand: Command {
         startTipsyRun(workspaceName: tempWorkspaceName,
                       targetName: target,
                       entryPointName: entryPointClassName,
-                      deviceUdid: deviceUdid)
+                      destination: destination)
         
         cleanUpTempFiles(workspacePath: Path(tempWorkspaceName),
                          projectPath: Path(tempProjectName),
@@ -148,7 +148,7 @@ extension RunCommand {
 
 extension RunCommand {
     
-    func startTipsyRun(workspaceName: String, targetName: String, entryPointName: String, deviceUdid: String) {
+    func startTipsyRun(workspaceName: String, targetName: String, entryPointName: String, destination: String) {
         print("Checking if simulator is running.")
         let output = main.run(bash: "killall -d Simulator")
         
@@ -164,9 +164,9 @@ extension RunCommand {
         
         var testCommand = ""
         if isXcprettyAvailable() {
-            testCommand = "set -o pipefail && xcodebuild -workspace \(workspaceName) -scheme \(targetName) -sdk iphonesimulator -destination 'id=\(deviceUdid)' -only-testing:\(targetName)/\(entryPointName) test | xcpretty"
+            testCommand = "set -o pipefail && xcodebuild -workspace \(workspaceName) -scheme \(targetName) -sdk iphonesimulator -destination '\(destination)' -only-testing:\(targetName)/\(entryPointName) test | xcpretty"
         } else {
-            testCommand = "xcodebuild -workspace \(workspaceName) -scheme \(targetName) -sdk iphonesimulator -destination 'id=\(deviceUdid)' -only-testing:\(targetName)/\(entryPointName) test"
+            testCommand = "xcodebuild -workspace \(workspaceName) -scheme \(targetName) -sdk iphonesimulator -destination '\(destination)' -only-testing:\(targetName)/\(entryPointName) test"
         }
         
         do {
