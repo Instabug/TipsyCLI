@@ -171,6 +171,8 @@ extension RunCommand {
         
         do {
             try main.runAndPrint(bash: testCommand)
+        } catch CommandError.returnedErrorCode(_, let errorCode) {
+            exit(errormessage: "Tipsy run has failed", errorcode: errorCode)
         } catch {
             print("Something went wrong while trying to run test command.")
         }
