@@ -175,6 +175,7 @@ extension RunCommand {
             exit(errormessage: "Tipsy run has failed", errorcode: errorCode)
         } catch {
             print("Something went wrong while trying to run test command.")
+            exit(1)
         }
         
         print("Finished run.")
